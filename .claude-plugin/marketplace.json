@@ -1,0 +1,31 @@
+{
+  "name": "hoopit-skills",
+  "metadata": {
+    "description": "Hoopit agent skills, grouped for the `skills` CLI."
+  },
+  "plugins": [
+    {
+      "name": "onboarding",
+      "skills": [
+        "skills/api-onboarding",
+        "skills/flutter-onboarding",
+        "skills/install-sentry-cli",
+        "skills/install-coderabbit-cli"
+      ]
+    },
+    {
+      "name": "integrations",
+      "skills": [
+        "skills/atlassian-cli",
+        "skills/handle-jira-issue"
+      ]
+    },
+    {
+      "name": "misc",
+      "skills": [
+        "skills/setup-statusline",
+        "skills/grill-my-idea"
+      ]
+    }
+  ]
+}

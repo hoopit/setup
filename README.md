@@ -157,40 +157,75 @@ scriptable way to get exactly these and nothing else.
 
 ## Hoopit's own skills
 
-Distributed from this repo (installed by step 2 above):
+Distributed from this repo, organized into **groups** (see [Skill groups](#skill-groups)):
 
-| Skill | Onboards | Files |
-|-------|----------|-------|
-| `flutter-onboarding` | `hoopit/flutter-app` | [SKILL.md](skills/flutter-onboarding/SKILL.md) · [ONBOARDING.md](skills/flutter-onboarding/ONBOARDING.md) |
-| `api-onboarding` | `hoopit/api` | [SKILL.md](skills/api-onboarding/SKILL.md) · [ONBOARDING.md](skills/api-onboarding/ONBOARDING.md) |
+| Group | Skill | What it does |
+|-------|-------|--------------|
+| **onboarding** | `api-onboarding` | Take a fresh machine to a working `hoopit/api` checkout |
+| **onboarding** | `flutter-onboarding` | Take a fresh machine to a working `hoopit/flutter-app` checkout |
+| **onboarding** | `install-sentry-cli` | Install + authenticate the `sentry` CLI |
+| **onboarding** | `install-coderabbit-cli` | Install + authenticate CodeRabbit + its Claude Code plugin |
+| **integrations** | `atlassian-cli` | Jira/Confluence from the terminal via `acli` |
+| **integrations** | `handle-jira-issue` | Handle a Jira issue end-to-end (branch → fix → PR) |
+| **misc** | `setup-statusline` | Install the team's custom Claude Code status line |
+| **misc** | `grill-my-idea` | Stress-test a plan against the domain model |
 
-Each onboarding skill takes a fresh machine to a working checkout of its project,
-cloning the project repo as a **sibling** of wherever you run it
-(`../flutter-app`, `../api`).
+The onboarding skills clone their project repo as a **sibling** of wherever you
+run them (`../flutter-app`, `../api`).
+
+## Skill groups
+
+Groups are declared in [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json).
+They show up as headers in the **interactive** `skills` picker (run
+`npx skills add hoopit/setup` with no `-s`/`-y` and toggle by group).
+
+**The `skills` CLI has no native group flags** — there is no `--group` and no
+`--exclude`; `-s` matches skill *names* only. So non-interactively you either
+list skills by name, or use this repo's `install.sh`, which understands groups:
+
+```bash
+SKILL_GROUPS="onboarding" ./install.sh                # only the onboarding group
+SKILL_GROUPS="onboarding,integrations" ./install.sh   # several groups
+EXCLUDE_GROUPS="misc" ./install.sh                    # all groups except misc
+./install.sh                                          # all groups (default)
+```
+
+`install.sh` expands the selected groups into a `-s` skill list. (The env var is
+`SKILL_GROUPS`, not `GROUPS` — the latter is a reserved bash variable.) To do the
+same with the raw CLI, just name the group's skills yourself, e.g.
+`npx skills add hoopit/setup -s api-onboarding,flutter-onboarding,install-sentry-cli,install-coderabbit-cli -g -a claude-code -y`.
 
 ## Repository layout
 
 ```
 setup/
-├── install.sh                 # one-shot installer (Matt subset + Hoopit skills)
-└── skills/                    # distribution layout — what `skills add` discovers
-    ├── flutter-onboarding/
+├── install.sh                      # one-shot installer (Matt subset + Hoopit groups)
+├── .claude-plugin/
+│   └── marketplace.json            # group definitions (onboarding / integrations / misc)
+└── skills/                         # distribution layout — what `skills add` discovers
+    ├── api-onboarding/
     │   ├── SKILL.md
     │   └── ONBOARDING.md
-    └── api-onboarding/
-        ├── SKILL.md
-        └── ONBOARDING.md
+    ├── handle-jira-issue/SKILL.md
+    ├── setup-statusline/{SKILL.md, statusline-command.sh}
+    └── …                           # one dir per skill (flat; groups come from the manifest)
 ```
 
 Skills live under `skills/<name>/SKILL.md` (a layout the `skills` CLI discovers).
 That's the *distribution* layout — distinct from the `.claude/skills/<name>/`
-*installed* layout the CLI writes into on a consumer's machine.
+*installed* layout the CLI writes into on a consumer's machine. Grouping is
+metadata-only (the manifest), so skill dirs stay flat and lockfile paths stay
+stable.
 
 ## Adding a Hoopit skill
 
 1. `mkdir skills/<name>` and write `skills/<name>/SKILL.md` (frontmatter `name` +
    `description`, then the instructions). Add reference files alongside if needed.
-2. Commit and push. Users pick it up on their next `npx skills update`.
+2. Add the skill to a group in **three** in-sync places (or it lands ungrouped):
+   - `.claude-plugin/marketplace.json` → the group's `skills` array (`skills/<name>`)
+   - `install.sh` → the matching `GROUP_*` variable
+   - the table above
+3. Commit and push. Users pick it up on their next `npx skills update`.
 
 ## Changing the Matt-Pocock subset
 
