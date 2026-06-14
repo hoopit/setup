@@ -10,11 +10,23 @@ Everything here is installed and managed with the [`skills` CLI](https://skills.
 
 ## Install
 
-One command (installs the Matt subset **and** Hoopit's skills, globally):
+Both commands install the curated Matt subset **and** Hoopit's skills globally
+into Claude Code.
+
+**All skills:**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/hoopit/setup/main/install.sh | bash
 ```
+
+**Everything except the onboarding skills** (skip api/flutter onboarding and the
+CLI installers):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/hoopit/setup/main/install.sh | EXCLUDE_GROUPS=onboarding bash
+```
+
+(See [Skill groups](#skill-groups) for `SKILL_GROUPS` / `EXCLUDE_GROUPS`.)
 
 Prefer to run the steps yourself? They're just two `skills` invocations:
 
