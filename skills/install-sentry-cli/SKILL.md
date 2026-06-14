@@ -54,15 +54,20 @@ Non-interactive / CI alternative (token from Sentry account settings → Auth To
 sentry auth login --token YOUR_SENTRY_API_TOKEN
 ```
 
-## 3. Verify
+## 3. Verify authentication (required to finish)
 
 ```bash
 sentry auth status
 ```
 
+**Do not report this skill complete until `sentry auth status` confirms an
+authenticated session** (it lists the signed-in org/user). If it reports *not
+authenticated* or errors, the setup is **not** done — return to step 2, re-run
+`sentry auth login`, and check again. Loop until it confirms.
+
 - [ ] `sentry auth status` shows you authenticated (org/user listed)
 
-If it reports *not authenticated*, re-run `sentry auth login`. To sign out: `sentry auth logout`.
+To sign out later: `sentry auth logout`.
 
 ## Notes
 

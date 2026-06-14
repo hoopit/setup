@@ -39,10 +39,15 @@ coderabbit auth login
 > **This step needs the user.** It launches a browser sign-in — pause and let the
 > developer finish it; don't try to drive the browser flow.
 
-Verify:
+Verify (required to finish):
 ```bash
 coderabbit auth status
 ```
+
+**Do not report this skill complete until `coderabbit auth status` confirms a
+signed-in session.** If it reports *not authenticated* or errors, the setup is
+**not** done — re-run `coderabbit auth login` and check again. Loop until it
+confirms.
 
 - [ ] `coderabbit auth status` shows you signed in
 
