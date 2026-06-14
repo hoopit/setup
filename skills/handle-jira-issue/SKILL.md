@@ -7,29 +7,58 @@ description: Handle any Jira issue end-to-end — an ITSM ticket or a project is
 
 Triggered when the user says something like "fix this issue" and provides any Jira issue key or link — either an ITSM ticket (e.g. `ITSM-1234`) or a project issue (e.g. `BAC-6934`, `WEB-1234`, `FA-987`), or a full Jira URL (e.g. `https://hoopit.atlassian.net/browse/ITSM-1234`).
 
-## Project / repository map
+## Configuration — read from CLAUDE.md, never hardcode
 
-The code work always lands in one of the three Hoopit engineering projects. The three repos are sibling directories under a common parent (`HOOPIT_ROOT`). Derive that parent from the repo this skill runs in rather than hardcoding it:
+This skill is project-agnostic. Every Hoopit-specific identifier (Jira keys, the
+Jira base URL, the ITSM project key, repo names) comes from the
+**`## Agent skills` → `### Workflow skills config`** block in each repo's
+`CLAUDE.md`. **Do not hardcode or guess these** — read them from CLAUDE.md. If a
+value you need is missing from the relevant repo's CLAUDE.md, **stop and ask the
+user to add it** rather than assuming a default.
+
+The repos are sibling directories under a common parent (`HOOPIT_ROOT`); derive
+it from the repo this skill is invoked in:
 
 ```bash
-# This skill lives in the api repo, so its parent is HOOPIT_ROOT.
 HOOPIT_ROOT="$(dirname "$(git rev-parse --show-toplevel)")"
 ```
 
-Each Jira project key then maps to a sibling repo:
+### Build the Jira-key → repo map dynamically
 
-| Jira project | `TARGET_REPO`              | Stack                  |
-|--------------|----------------------------|------------------------|
-| `BAC`        | `$HOOPIT_ROOT/api`         | Backend (Django / DRF) |
-| `WEB`        | `$HOOPIT_ROOT/web-admin`   | Web admin (Angular)    |
-| `FA`         | `$HOOPIT_ROOT/flutter-app` | Mobile (Flutter)       |
+Do **not** assume a fixed `BAC/WEB/FA` map. For each sibling repo under
+`$HOOPIT_ROOT` that has a `CLAUDE.md`, read its declared **Jira project key** from
+the Workflow skills config block. That yields the current `Jira key → repo`
+mapping, so new projects work without editing this skill:
 
-Throughout this skill:
-- `TARGET_PROJECT` — the Jira project key the fix is tracked under (`BAC`, `WEB`, or `FA`).
-- `TARGET_REPO` — the matching repo directory from the table above.
-- `TARGET_KEY` — the project issue key in `TARGET_PROJECT` (e.g. `BAC-6934`, `WEB-1234`, `FA-987`). This becomes the working `JIRA_KEY`.
+```bash
+# Prints "KEY<TAB>/path/to/repo" for every sibling repo that declares a Jira key.
+for repo in "$HOOPIT_ROOT"/*/; do
+  cm="$repo/CLAUDE.md"; [ -f "$cm" ] || continue
+  key="$(grep -iE '^\s*[-*]\s*\*\*Jira project key:\*\*' "$cm" | grep -oE '`[A-Z][A-Z0-9]+`' | tr -d '`' | head -1)"
+  [ -n "$key" ] && printf '%s\t%s\n' "$key" "${repo%/}"
+done
+```
+
+(At the time of writing that resolves to `BAC → api`, `WEB → web-admin`,
+`FA → flutter-app`, but always resolve it from CLAUDE.md.)
+
+Once you know `TARGET_REPO`, read the rest of its Workflow skills config —
+**Jira base URL**, **ITSM project key**, **Default branch** — from that repo's
+CLAUDE.md and use them in place of the literals below.
+
+Variables used throughout this skill:
+- `TARGET_PROJECT` — the Jira project key the fix is tracked under.
+- `TARGET_REPO` — the repo whose CLAUDE.md declares `TARGET_PROJECT`.
+- `TARGET_KEY` — the project issue key in `TARGET_PROJECT` (e.g. `BAC-6934`). Becomes the working `JIRA_KEY`.
+- `JIRA_BASE_URL` — the Jira base URL from `TARGET_REPO`'s CLAUDE.md (e.g. `https://hoopit.atlassian.net`).
+- `ITSM_PROJECT` — the ITSM project key from CLAUDE.md (e.g. `ITSM`); ITSM keys look like `<ITSM_PROJECT>-1234`.
+- `DEFAULT_BRANCH` — `TARGET_REPO`'s default branch from CLAUDE.md (e.g. `master`).
 - `ITSM_ISSUE_KEY` — the linked ITSM ticket, **if one exists**. May be unset.
 - `DETAILS_KEY` — the issue you read the bug report / symptoms / attachments from: the **ITSM ticket when one exists**, otherwise the project issue itself.
+
+> Wherever the steps below show `https://hoopit.atlassian.net`, `ITSM`, or
+> `master`, substitute `$JIRA_BASE_URL`, `$ITSM_PROJECT`, and `$DEFAULT_BRANCH`
+> from CLAUDE.md.
 
 ## Determine the scenario
 
@@ -58,10 +87,7 @@ Before anything else, classify the input issue. If a full Jira URL was provided,
 For project-originated issues the project is already known from the key prefix. For ITSM-originated issues, resolve the target project as follows:
 
 1. **Existing link wins.** After fetching the ITSM issue, if it already links to an issue whose key prefix is `BAC-`, `WEB-`, or `FA-`, that is `TARGET_PROJECT` — no question needed.
-2. **Fall back to cwd.** Otherwise, default to whichever repo the current working directory sits inside, mapping the repo's directory name back to its project key via the table above:
-   - cwd under `$HOOPIT_ROOT/api` → `BAC`
-   - cwd under `$HOOPIT_ROOT/web-admin` → `WEB`
-   - cwd under `$HOOPIT_ROOT/flutter-app` → `FA`
+2. **Fall back to cwd.** Otherwise, default to whichever repo the current working directory sits inside, and read **that** repo's `Jira project key` from its CLAUDE.md Workflow skills config — that is `TARGET_PROJECT`.
 3. **Ask if ambiguous.** If neither rule resolves (e.g. cwd is outside all three repos, or the ITSM issue clearly describes a different layer than the cwd suggests), ask the user which project to target before doing anything else.
 
 ## Step 1 — Fetch issue details
@@ -145,7 +171,7 @@ acli jira workitem create \
 <technical explanation or context>
 
 ## References
-- ITSM: [<ITSM_ISSUE_KEY>](https://hoopit.atlassian.net/browse/<ITSM_ISSUE_KEY>)'
+- ITSM: [<ITSM_ISSUE_KEY>]($JIRA_BASE_URL/browse/<ITSM_ISSUE_KEY>)'
 ```
 
 Note the new `TARGET_KEY` printed by the command (e.g. `BAC-6934`, `WEB-1234`, `FA-987`).
@@ -268,7 +294,7 @@ Run a review against the repo's default branch from the worktree:
 
 ```bash
 cd "$WORKTREE_DIR"
-coderabbit review --prompt-only --base master
+coderabbit review --prompt-only --base "$DEFAULT_BRANCH"
 ```
 
 (Use `main` instead of `master` if that is the repo's default branch.)
@@ -322,10 +348,10 @@ gh pr create \
 <description of the fix>
 
 ## Jira
-[<JIRA_KEY>](https://hoopit.atlassian.net/browse/<JIRA_KEY>)
+[<JIRA_KEY>]($JIRA_BASE_URL/browse/<JIRA_KEY>)
 
 ## ITSM
-[<ITSM_ISSUE_KEY>](https://hoopit.atlassian.net/browse/<ITSM_ISSUE_KEY>)
+[<ITSM_ISSUE_KEY>]($JIRA_BASE_URL/browse/<ITSM_ISSUE_KEY>)
 
 ## Changes
 - <bullet point summary of changes>
@@ -340,7 +366,7 @@ gh pr create \
 
 ### Findings not addressed
 - <severity>: <finding> — <reason for skipping>" \
-  --base master
+  --base "$DEFAULT_BRANCH"
 ```
 
 (Again, swap `master` for `main` if that's the repo's default branch.)

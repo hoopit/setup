@@ -7,6 +7,23 @@ description: Fix a Sentry issue end-to-end — fetch details, create or link a J
 
 Triggered when the user says something like "fix this sentry issue" and provides a Sentry URL or issue ID (e.g. `BAC-QCB` or `https://hoopit.sentry.io/issues/...`).
 
+## Configuration — read from CLAUDE.md, never hardcode
+
+This skill is project-agnostic. Run it from inside the affected repo, then read
+its **`## Agent skills` → `### Workflow skills config`** block in `CLAUDE.md` and
+use those values throughout — **do not hardcode or guess them**. If a value you
+need is missing (or marked TODO), **stop and ask the user to add it** to CLAUDE.md.
+
+- `JIRA_PROJECT` — the repo's **Jira project key** (e.g. `BAC`).
+- `JIRA_BASE_URL` — the **Jira base URL** (e.g. `https://hoopit.atlassian.net`).
+- `SENTRY_ORG` — the **Sentry org** (e.g. `hoopit`).
+- `SENTRY_PROJECT` — the **Sentry project** slug.
+- `DEFAULT_BRANCH` — the repo's **default branch** (e.g. `master`).
+
+Wherever the steps below show `BAC`, `hoopit`, `https://hoopit.atlassian.net`, or
+`master`, substitute `$JIRA_PROJECT`, `$SENTRY_ORG`, `$JIRA_BASE_URL`, and
+`$DEFAULT_BRANCH`. Resolve the repo from where you are invoked (cwd) and its
+CLAUDE.md — not from the Sentry ID prefix.
 
 ## Step 1 — Fetch Sentry issue details
 
@@ -18,10 +35,10 @@ Use the `sentry` CLI to get full issue details. If a full Sentry URL is provided
 sentry issue view <SENTRY_ID> --json
 ```
 
-If the CLI cannot auto-detect the org, prefix the issue ID with the org slug:
+If the CLI cannot auto-detect the org, prefix the issue ID with the org slug (`$SENTRY_ORG` from CLAUDE.md):
 
 ```bash
-sentry issue view hoopit/<SENTRY_ID> --json
+sentry issue view $SENTRY_ORG/<SENTRY_ID> --json
 ```
 
 For a recent event with stacktrace and request context, also fetch one event:
@@ -55,7 +72,7 @@ If the issue cannot be understood or reproduced from the available information, 
 
 ```bash
 acli jira workitem search \
-  --jql 'project = BAC AND text ~ "<SENTRY_ID>" ORDER BY created DESC' \
+  --jql "project = $JIRA_PROJECT AND text ~ \"<SENTRY_ID>\" ORDER BY created DESC" \
   --limit 5 \
   --fields 'key,summary,status'
 ```
@@ -64,7 +81,7 @@ If that returns nothing, also try a summary keyword search:
 
 ```bash
 acli jira workitem search \
-  --jql 'project = BAC AND summary ~ "<short error description>" AND resolution = Unresolved ORDER BY created DESC' \
+  --jql "project = $JIRA_PROJECT AND summary ~ \"<short error description>\" AND resolution = Unresolved ORDER BY created DESC" \
   --limit 5 \
   --fields 'key,summary,status'
 ```
@@ -73,11 +90,11 @@ If a matching unresolved issue already exists, use it — note its key (e.g. `BA
 
 ### 2b — Create a new Jira issue if none exists
 
-The BAC issue type must be **Bug**.
+The issue type must be **Bug**.
 
 ```bash
 acli jira workitem create \
-  --project BAC \
+  --project "$JIRA_PROJECT" \
   --type Bug \
   --summary '<concise bug title>' \
   --description '## Summary
@@ -106,7 +123,16 @@ acli jira workitem comment create \
 
 ## Step 3 — Create a Git branch as a worktree
 
-Load the `create-worktree` skill and follow it to create the worktree (it covers the `master` checkout, virtualenv/`.envrc` setup, isolated test DB, and the `.envs` caveats). Use this branch naming convention:
+Defer to the repo's own worktree conventions:
+
+1. If `.claude/skills/create-worktree/SKILL.md` exists in this repo, read and follow it (it covers any per-repo venv/`.envrc`, isolated test DB, or `.envs` caveats).
+2. Otherwise create a plain worktree off the repo's default branch:
+
+   ```bash
+   git fetch origin
+   BRANCH="<JIRA_KEY>/bug/<short-description>"
+   git worktree add -b "$BRANCH" ".worktrees/$(echo "$BRANCH" | tr '/' '-')" "origin/$DEFAULT_BRANCH"
+   ```
 
 Branch naming convention: `<JIRA_KEY>/bug/<short-kebab-description>`
 
@@ -122,16 +148,16 @@ All subsequent steps (4–9) run from `$WORKTREE_DIR` unless stated otherwise.
 
 - Navigate to the relevant file(s) in `$WORKTREE_DIR` identified in the Sentry stacktrace.
 - Apply the minimal, targeted fix.
-- Follow existing code conventions. Consult any relevant rules files (e.g. `.agents/rules/models.md`, `.agents/rules/views.md`) if the fix touches models or views.
+- Follow existing code conventions. Read any relevant skills in this repo's `.claude/skills/` that apply to the area you're touching (e.g. `models`, `views`, `urls`, `migrations` in the api repo; the web-admin and flutter-app repos have their own). Skip skills that don't exist.
 - Do **not** refactor unrelated code.
 
 ## Step 5 — Write tests
 
-Read `.agents/rules/writing-tests.md` before writing tests.
+Defer to the repo's testing conventions: if `.claude/skills/writing-tests/SKILL.md` exists, read and follow it before writing tests; if `.claude/skills/running-tests/SKILL.md` exists, use it to run them.
 
 - Write at least **1 test** that reproduces the bug and verifies the fix.
-- Place the test in the appropriate `tests/` directory alongside the code being fixed.
-- Include a docstring referencing the Jira issue, e.g.:
+- Place the test alongside the code being fixed, following the surrounding test layout.
+- Include a docstring/comment referencing the Jira issue, e.g.:
 
 ```python
 def test_payment_data_not_double_serialized(self):
@@ -143,11 +169,7 @@ def test_payment_data_not_double_serialized(self):
     ...
 ```
 
-Run the new test (and related tests) to confirm they pass. When running tests from a worktree, run `pytest` from the **repo root** but point it at the test file in the worktree:
-
-```bash
-uv run pytest "$WORKTREE_DIR/path/to/test_file.py" -q
-```
+Run the new test (and related tests) to confirm they pass, using the repo's test runner (per its `running-tests` skill). If the repo provides no realistic way to add an automated regression test for this kind of bug, say so explicitly in the PR description instead of skipping silently.
 
 If tests fail, fix the issues before proceeding.
 
@@ -178,13 +200,13 @@ Fixes BAC-QCB
 
 ## Step 7 — Code review with CodeRabbit
 
-Read `.agents/skills/code-review/SKILL.md` and follow its instructions.
+Read this repo's `.claude/skills/code-review/SKILL.md` and follow its instructions.
 
-Run a review against `master` from the worktree:
+Run a review against the repo's default branch from the worktree:
 
 ```bash
 cd "$WORKTREE_DIR"
-coderabbit review --prompt-only --base master
+coderabbit review --prompt-only --base "$DEFAULT_BRANCH"
 ```
 
 Group findings by severity (Critical → Warning → Info). For each finding, decide whether to fix or skip it:
@@ -257,7 +279,7 @@ gh pr create \
 <description of the fix>
 
 ## Jira
-[<JIRA_KEY>](https://hoopit.atlassian.net/browse/<JIRA_KEY>)
+[<JIRA_KEY>]($JIRA_BASE_URL/browse/<JIRA_KEY>)
 
 ## Sentry
 [<SENTRY_ID>](<SENTRY_URL>)
@@ -275,7 +297,7 @@ gh pr create \
 
 ### Findings not addressed
 - <severity>: <finding> — <reason for skipping>" \
-  --base master
+  --base "$DEFAULT_BRANCH"
 ```
 
 Report the PR URL to the user.
