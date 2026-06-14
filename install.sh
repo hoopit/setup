@@ -15,7 +15,7 @@
 # Usage:
 #   ./install.sh                                        # all groups, Claude Code, global
 #   SKILL_GROUPS="onboarding" ./install.sh              # only the onboarding group
-#   SKILL_GROUPS="onboarding,integrations" ./install.sh # several groups
+#   SKILL_GROUPS="onboarding,workflows" ./install.sh # several groups
 #   EXCLUDE_GROUPS="misc" ./install.sh                  # everything except misc
 #   AGENTS="claude-code,universal" ./install.sh    # also the generic ~/.config/agents/skills
 #   AGENTS="" ./install.sh                          # pick agents interactively (TTY only)
@@ -43,9 +43,10 @@ AGENTS="${AGENTS-claude-code}"
 # The `skills` CLI has no native --group / --exclude flags, so this installer
 # expands groups into a `-s` skill list itself.
 GROUP_ONBOARDING="api-onboarding flutter-onboarding install-sentry-cli install-coderabbit-cli"
-GROUP_INTEGRATIONS="atlassian-cli handle-jira-issue"
+GROUP_WORKFLOWS="handle-jira-issue fix-sentry-issue review-github-comments"
+GROUP_TOOLS="atlassian-cli"
 GROUP_MISC="setup-statusline grill-my-idea"
-ALL_GROUPS="onboarding integrations misc"
+ALL_GROUPS="onboarding workflows tools misc"
 
 # Which groups to install / exclude (comma or space separated).
 # NB: not named GROUPS — that's a reserved bash variable (user group IDs).

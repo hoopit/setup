@@ -14,10 +14,17 @@
       ]
     },
     {
-      "name": "integrations",
+      "name": "workflows",
       "skills": [
-        "skills/atlassian-cli",
-        "skills/handle-jira-issue"
+        "skills/handle-jira-issue",
+        "skills/fix-sentry-issue",
+        "skills/review-github-comments"
+      ]
+    },
+    {
+      "name": "tools",
+      "skills": [
+        "skills/atlassian-cli"
       ]
     },
     {

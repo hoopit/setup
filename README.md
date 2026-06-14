@@ -177,8 +177,10 @@ Distributed from this repo, organized into **groups** (see [Skill groups](#skill
 | **onboarding** | `flutter-onboarding` | Take a fresh machine to a working `hoopit/flutter-app` checkout |
 | **onboarding** | `install-sentry-cli` | Install + authenticate the `sentry` CLI |
 | **onboarding** | `install-coderabbit-cli` | Install + authenticate CodeRabbit + its Claude Code plugin |
-| **integrations** | `atlassian-cli` | Jira/Confluence from the terminal via `acli` |
-| **integrations** | `handle-jira-issue` | Handle a Jira issue end-to-end (branch → fix → PR) |
+| **workflows** | `handle-jira-issue` | Handle a Jira issue end-to-end (branch → fix → PR) |
+| **workflows** | `fix-sentry-issue` | Fix a Sentry issue end-to-end (ticket → branch → fix → PR) |
+| **workflows** | `review-github-comments` | Review and resolve all review comments on a GitHub PR |
+| **tools** | `atlassian-cli` | Jira/Confluence from the terminal via `acli` |
 | **misc** | `setup-statusline` | Install the team's custom Claude Code status line |
 | **misc** | `grill-my-idea` | Stress-test a plan against the domain model |
 
@@ -197,7 +199,7 @@ list skills by name, or use this repo's `install.sh`, which understands groups:
 
 ```bash
 SKILL_GROUPS="onboarding" ./install.sh                # only the onboarding group
-SKILL_GROUPS="onboarding,integrations" ./install.sh   # several groups
+SKILL_GROUPS="onboarding,workflows" ./install.sh   # several groups
 EXCLUDE_GROUPS="misc" ./install.sh                    # all groups except misc
 ./install.sh                                          # all groups (default)
 ```
@@ -213,7 +215,7 @@ same with the raw CLI, just name the group's skills yourself, e.g.
 setup/
 ├── install.sh                      # one-shot installer (Matt subset + Hoopit groups)
 ├── .claude-plugin/
-│   └── marketplace.json            # group definitions (onboarding / integrations / misc)
+│   └── marketplace.json            # group definitions (onboarding / workflows / tools / misc)
 └── skills/                         # distribution layout — what `skills add` discovers
     ├── api-onboarding/
     │   ├── SKILL.md
