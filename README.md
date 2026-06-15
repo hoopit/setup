@@ -53,10 +53,13 @@ npx skills@latest add hoopit/setup -s '*' -g -a claude-code -y
 
 - **Scope:** `-g` installs globally (user-level, default). Use `-p` for the
   current project (`./.claude/…`). `install.sh` honors `SCOPE=-p`.
-- **Agents:** the installer defaults to **`claude-code`** only. Override with
-  `AGENTS`:
+- **Agents:** the installer defaults to **`claude-code,universal`**. The
+  `universal` target makes skills **symlinked** instead of copied — the CLI keeps
+  one real copy in `~/.agents/skills` and points `~/.claude/skills/<skill>` at it
+  (one update point, no duplication). With a single agent there's no shared
+  store, so the CLI writes copies. Override with `AGENTS`:
   ```bash
-  AGENTS="claude-code,universal" ./install.sh   # also the generic ~/.config/agents/skills
+  AGENTS="claude-code" ./install.sh               # Claude Code only — copies, no symlinks
   AGENTS="" ./install.sh                          # pick agents interactively (TTY only)
   ```
 
@@ -67,9 +70,11 @@ npx skills@latest add hoopit/setup -s '*' -g -a claude-code -y
 > menu instead, drop **both** `-a` and `-y` — but note the interactive picker
 > needs a real terminal, so it can't run through the `curl | bash` one-liner.
 
-> **Agent-flag quirks:** `add -a` accepts a comma list (`-a claude-code,universal`).
-> `remove -a` does **not** split commas — pass repeated flags
-> (`-a junie -a pi`).
+> **Agent-flag quirks:** neither `-a` nor `-s` splits a comma list anymore — a
+> value like `claude-code,universal` is treated as one literal name and matches
+> nothing (*"Invalid agents…"* / *"No matching skills…"*). Pass **repeated
+> flags**: `-a claude-code -a universal -s caveman -s handoff`. `install.sh`
+> expands its comma-separated `AGENTS`/skill lists into repeated flags for you.
 
 ## Managing skills — `add` / `remove` / `update`
 

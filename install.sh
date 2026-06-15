@@ -27,15 +27,19 @@ set -euo pipefail
 # Install scope: -g (global, user-level) by default; set SCOPE=-p for project.
 SCOPE="${SCOPE:--g}"
 
-# Agent target(s). Default: Claude Code only.
+# Agent target(s). Default: Claude Code + universal.
+#   - We include `universal` so skills are symlinked rather than copied: the CLI
+#     keeps one real copy in ~/.agents/skills and points ~/.claude/skills/<skill>
+#     at it. With a single agent there's no shared store, so it writes copies.
 #   - Override with a comma-separated list of agent keys, e.g.
+#       AGENTS="claude-code"             (Claude Code only — copies, no symlinks)
 #       AGENTS="claude-code,universal"   (valid keys: see `npx skills add <repo> -h`)
 #   - Set AGENTS="" to choose interactively. NOTE: an interactive picker needs a
 #     real terminal, so it does NOT work through the `curl | bash` one-liner —
 #     use a pinned list (or run install.sh from a checkout) in that case.
-# Using `${AGENTS-claude-code}` (single dash) so an explicit empty value is kept
-# as "interactive", while leaving it unset falls back to the default.
-AGENTS="${AGENTS-claude-code}"
+# Using `${AGENTS-...}` (single dash) so an explicit empty value is kept as
+# "interactive", while leaving it unset falls back to the default.
+AGENTS="${AGENTS-claude-code,universal}"
 
 # --- Hoopit skill groups -----------------------------------------------------
 # The groups below mirror .claude-plugin/marketplace.json (which is what makes
@@ -98,8 +102,13 @@ add_skills() {
 		done
 	fi
 	if [ -n "$AGENTS" ]; then
-		# Deterministic: fixed agents, no prompts.
-		npx -y skills@latest add "$pkg" "${sflags[@]}" "$SCOPE" -a "$AGENTS" -y
+		# Deterministic: fixed agents, no prompts. `-a` no longer splits a comma
+		# list either (same as `-s`), so expand AGENTS into one `-a` per agent.
+		local aflags=() a
+		for a in $(printf '%s' "$AGENTS" | tr ',' ' '); do
+			[ -n "$a" ] && aflags+=(-a "$a")
+		done
+		npx -y skills@latest add "$pkg" "${sflags[@]}" "$SCOPE" "${aflags[@]}" -y
 	else
 		# Interactive agent selection. Scope (-g/-p) and skills (-s) stay fixed,
 		# so the only prompt is which agents to install to.
