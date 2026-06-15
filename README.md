@@ -194,6 +194,7 @@ Distributed from this repo, organized into **groups** (see [Skill groups](#skill
 | **workflows** | `review-github-comments` | Review and resolve all review comments on a GitHub PR |
 | **workflows** | `write-pull-request` | Author PRs with clean Jira issue links (GitHub-for-Jira hygiene) |
 | **tools** | `atlassian-cli` | Jira/Confluence from the terminal via `acli` |
+| **tools** | `circleci-tests` | Fetch failing tests from a CircleCI job URL |
 | **misc** | `setup-statusline` | Install the team's custom Claude Code status line |
 | **misc** | `grill-my-idea` | Stress-test a plan against the domain model |
 
@@ -223,49 +224,9 @@ same with the raw CLI, just name the group's skills yourself — one `-s` per sk
 e.g.
 `npx skills add hoopit/setup -s api-onboarding -s flutter-onboarding -s install-sentry-cli -s install-coderabbit-cli -g -a claude-code -y`.
 
-## Repository layout
-
-```
-setup/
-├── install.sh                      # one-shot installer (Matt subset + Hoopit groups)
-├── .claude-plugin/
-│   └── marketplace.json            # group definitions (onboarding / workflows / tools / misc)
-└── skills/                         # distribution layout — what `skills add` discovers
-    ├── onboarding/
-    │   ├── api-onboarding/{SKILL.md, ONBOARDING.md}
-    │   ├── flutter-onboarding/{SKILL.md, ONBOARDING.md}
-    │   ├── install-sentry-cli/SKILL.md
-    │   └── install-coderabbit-cli/SKILL.md
-    ├── workflows/
-    │   ├── handle-jira-issue/SKILL.md
-    │   ├── fix-sentry-issue/SKILL.md
-    │   ├── review-github-comments/SKILL.md
-    │   └── write-pull-request/SKILL.md
-    ├── tools/
-    │   └── atlassian-cli/SKILL.md
-    └── misc/
-        ├── setup-statusline/{SKILL.md, statusline-command.sh}
-        └── grill-my-idea/{SKILL.md, CONTEXT-FORMAT.md}
-```
-
-Skills live under `skills/<group>/<name>/SKILL.md`, one folder per group so the
-on-disk layout mirrors the groups declared in the manifest. That's the
-*distribution* layout — distinct from the `.claude/skills/<name>/` *installed*
-layout the CLI writes into on a consumer's machine. The `skills` CLI discovers
-skills by name (it recurses into subfolders), so the nesting is purely
-organizational and lockfile entries stay keyed by skill name.
-
-## Adding a Hoopit skill
-
-1. `mkdir skills/<group>/<name>` (pick the group folder it belongs to) and write
-   `skills/<group>/<name>/SKILL.md` (frontmatter `name` + `description`, then the
-   instructions). Add reference files alongside if needed.
-2. Register the skill in **three** in-sync places (or it lands ungrouped):
-   - `.claude-plugin/marketplace.json` → the group's `skills` array
-     (`skills/<group>/<name>`)
-   - `install.sh` → the matching `GROUP_*` variable (skill *name* only)
-   - the table above
-3. Commit and push. Users pick it up on their next `npx skills update`.
+> **Adding or removing a Hoopit skill?** When working in this repo, Claude has a
+> project-local `create-hoopit-setup-skill` skill (under `.claude/skills/`) that
+> documents the procedure and the files to keep in sync.
 
 ## Changing the Matt-Pocock subset
 

@@ -25,7 +25,8 @@
     {
       "name": "hoopit-tools",
       "skills": [
-        "./skills/atlassian-cli"
+        "./skills/atlassian-cli",
+        "./skills/circleci-tests"
       ]
     },
     {
