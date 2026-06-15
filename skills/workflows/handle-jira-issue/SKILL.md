@@ -60,31 +60,11 @@ Variables used throughout this skill:
 > `master`, substitute `$JIRA_BASE_URL`, `$ITSM_PROJECT`, and `$DEFAULT_BRANCH`
 > from CLAUDE.md.
 
-## Keep Jira issue links clean (GitHub-for-Jira)
-
-GitHub-for-Jira links the PR/commits to **every** Jira key (`ABC-123` — letters,
-dash, digits) it finds in the **branch name, commit messages, and PR title +
-body**. There is no "passive mention": wrapping a key in a markdown link or a
-`/browse/` URL does **not** exempt it — the raw key string is still there, so it
-still links. (This is the open request in github-for-jira#1031; until it ships,
-the emitted text is the only control.)
-
-Apply this wherever those three surfaces are written (Steps 3, 6, 7, 9):
-
-- **Allowed — link freely** (the work items this change delivers):
-  - `JIRA_KEY` (= `TARGET_KEY`, the project issue this PR fixes), and
-  - `ITSM_ISSUE_KEY`, **only when an ITSM ticket is linked** — it is the
-    originating ticket, so the PR *should* surface on it (keep the `## ITSM`
-    section and the `Refs <ITSM_ISSUE_KEY>` commit footer).
-- **Forbidden — never write the key here**: any *unrelated* work item — a
-  sibling project's issue (`WEB-…`/`FA-…`), an unrelated `BAC-…` task, a
-  "similar to …" aside. Reference related tickets in **Jira** (issue link /
-  comment), not in the PR — linkifying them will not stop the integration from
-  attaching the PR to them.
-
-When writing the freeform sections (`## Summary`, `## Changes`,
-`## Code review notes`) and any commit body, re-check that no `ABC-123` key
-beyond the allowed set has crept in.
+> **PR/Jira link hygiene:** when naming the branch (Step 3), writing commit
+> messages (Steps 6–7), or authoring the PR (Step 9), load the
+> `write-pull-request` skill and follow it. For this workflow the work items the
+> PR may link are `JIRA_KEY` and — only when an ITSM ticket is linked —
+> `ITSM_ISSUE_KEY`; keep every other Jira key out of those surfaces.
 
 ## Determine the scenario
 
@@ -364,7 +344,7 @@ git push -u origin <branch-name>
 
 ## Step 9 — Create a Pull Request
 
-Create a PR using the GitHub CLI. Include the `## ITSM` section **only when an ITSM ticket is linked** — omit it for a project issue with no ITSM link. Per *Keep Jira issue links clean* above, the only Jira keys allowed in the title/body are `JIRA_KEY` and (when linked) `ITSM_ISSUE_KEY` — keep any unrelated work-item keys out of the freeform sections:
+Create a PR using the GitHub CLI. Include the `## ITSM` section **only when an ITSM ticket is linked** — omit it for a project issue with no ITSM link:
 
 ```bash
 cd "$WORKTREE_DIR"

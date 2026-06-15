@@ -18,7 +18,8 @@
       "skills": [
         "skills/workflows/handle-jira-issue",
         "skills/workflows/fix-sentry-issue",
-        "skills/workflows/review-github-comments"
+        "skills/workflows/review-github-comments",
+        "skills/workflows/write-pull-request"
       ]
     },
     {

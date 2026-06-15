@@ -192,6 +192,7 @@ Distributed from this repo, organized into **groups** (see [Skill groups](#skill
 | **workflows** | `handle-jira-issue` | Handle a Jira issue end-to-end (branch → fix → PR) |
 | **workflows** | `fix-sentry-issue` | Fix a Sentry issue end-to-end (ticket → branch → fix → PR) |
 | **workflows** | `review-github-comments` | Review and resolve all review comments on a GitHub PR |
+| **workflows** | `write-pull-request` | Author PRs with clean Jira issue links (GitHub-for-Jira hygiene) |
 | **tools** | `atlassian-cli` | Jira/Confluence from the terminal via `acli` |
 | **misc** | `setup-statusline` | Install the team's custom Claude Code status line |
 | **misc** | `grill-my-idea` | Stress-test a plan against the domain model |
@@ -238,7 +239,8 @@ setup/
     ├── workflows/
     │   ├── handle-jira-issue/SKILL.md
     │   ├── fix-sentry-issue/SKILL.md
-    │   └── review-github-comments/SKILL.md
+    │   ├── review-github-comments/SKILL.md
+    │   └── write-pull-request/SKILL.md
     ├── tools/
     │   └── atlassian-cli/SKILL.md
     └── misc/

@@ -47,7 +47,7 @@ AGENTS="${AGENTS-claude-code,universal}"
 # The `skills` CLI has no native --group / --exclude flags, so this installer
 # expands groups into a `-s` skill list itself.
 GROUP_ONBOARDING="api-onboarding flutter-onboarding install-sentry-cli install-coderabbit-cli"
-GROUP_WORKFLOWS="handle-jira-issue fix-sentry-issue review-github-comments"
+GROUP_WORKFLOWS="handle-jira-issue fix-sentry-issue review-github-comments write-pull-request"
 GROUP_TOOLS="atlassian-cli"
 GROUP_MISC="setup-statusline grill-my-idea"
 ALL_GROUPS="onboarding workflows tools misc"
