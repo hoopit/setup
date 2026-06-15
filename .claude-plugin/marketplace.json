@@ -7,32 +7,32 @@
     {
       "name": "onboarding",
       "skills": [
-        "skills/onboarding/api-onboarding",
-        "skills/onboarding/flutter-onboarding",
-        "skills/onboarding/install-sentry-cli",
-        "skills/onboarding/install-coderabbit-cli"
+        "./skills/api-onboarding",
+        "./skills/flutter-onboarding",
+        "./skills/install-sentry-cli",
+        "./skills/install-coderabbit-cli"
       ]
     },
     {
       "name": "workflows",
       "skills": [
-        "skills/workflows/handle-jira-issue",
-        "skills/workflows/fix-sentry-issue",
-        "skills/workflows/review-github-comments",
-        "skills/workflows/write-pull-request"
+        "./skills/handle-jira-issue",
+        "./skills/fix-sentry-issue",
+        "./skills/review-github-comments",
+        "./skills/write-pull-request"
       ]
     },
     {
       "name": "tools",
       "skills": [
-        "skills/tools/atlassian-cli"
+        "./skills/atlassian-cli"
       ]
     },
     {
       "name": "misc",
       "skills": [
-        "skills/misc/setup-statusline",
-        "skills/misc/grill-my-idea"
+        "./skills/setup-statusline",
+        "./skills/grill-my-idea"
       ]
     }
   ]
