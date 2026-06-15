@@ -5,43 +5,38 @@
     "email": "lars-kristian@hoopit.io"
   },
   "metadata": {
-    "description": "Hoopit agent skills, grouped for the `skills` CLI and Claude Code plugins."
+    "description": "Hoopit agent skills, distributed as Claude Code plugins."
   },
   "plugins": [
     {
       "name": "hoopit-onboarding",
-      "source": "./",
-      "strict": false,
-      "description": "Take a fresh machine to a working Hoopit checkout (api / flutter-app) and install the supporting CLIs.",
-      "skills": [
-        "./skills/setup-api",
-        "./skills/setup-flutter-app",
-        "./skills/install-sentry-cli",
-        "./skills/install-coderabbit-cli"
-      ]
+      "source": "./plugins/onboarding",
+      "description": "Take a fresh machine to a working hoopit/api or hoopit/flutter-app checkout, plus the supporting CLIs."
     },
     {
       "name": "hoopit-dev",
-      "source": "./",
-      "strict": false,
-      "description": "Day-to-day dev workflows and CLIs: Jira/Sentry issues, PR review, Atlassian + CircleCI from the terminal.",
-      "skills": [
-        "./skills/handle-jira-issue",
-        "./skills/fix-sentry-issue",
-        "./skills/review-github-comments",
-        "./skills/write-pull-request",
-        "./skills/atlassian-cli",
-        "./skills/circleci-tests"
-      ]
+      "source": "./plugins/dev",
+      "description": "Day-to-day dev workflows and CLIs: Jira/Sentry issues, PR review, Atlassian, CircleCI."
     },
     {
       "name": "hoopit-misc",
-      "source": "./",
+      "source": "./plugins/misc",
+      "description": "Odds and ends: status line, idea stress-testing."
+    },
+    {
+      "name": "hoopit-matt-picks",
+      "source": {
+        "source": "github",
+        "repo": "mattpocock/skills"
+      },
       "strict": false,
-      "description": "Odds and ends: status line, idea stress-testing.",
+      "description": "Curated picks from mattpocock/skills, tracking upstream.",
       "skills": [
-        "./skills/setup-statusline",
-        "./skills/grill-my-idea"
+        "./skills/productivity/caveman",
+        "./skills/productivity/write-a-skill",
+        "./skills/productivity/handoff",
+        "./skills/engineering/zoom-out",
+        "./skills/engineering/grill-with-docs"
       ]
     }
   ]

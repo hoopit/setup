@@ -1,18 +1,25 @@
 ---
 name: create-hoopit-skill
-description: Conventions for authoring skills in the hoopit/skills repo — keep skills project-agnostic and keep the four sync points in lockstep. Use when adding, editing, or removing a skill in this repo.
+description: Conventions for authoring skills in the hoopit/skills repo — keep skills project-agnostic and put each skill in the right plugin directory. Use when adding, editing, or removing a skill in this repo.
 ---
 
 # Authoring skills in hoopit/skills
 
-This repo is a **distribution** of skills: one skill is installed into many
-different Hoopit repos (`api`, `flutter-app`, …) via the `skills` CLI. A skill
-written here runs in all of them, so it must not assume it's running in any one
-of them.
+This repo is a **distribution** of skills, shipped as a Claude Code plugin
+marketplace: one skill is installed into many different Hoopit repos (`api`,
+`flutter-app`, …). A skill written here runs in all of them, so it must not assume
+it's running in any one of them.
 
-> This skill itself is **not** distributed — it lives in `.claude/skills/`, not
-> `skills/`, so the marketplace never picks it up. It exists only to guide
-> authoring while working in this repo.
+Layout: each plugin is a self-contained directory `plugins/<group>/` with its own
+`.claude-plugin/plugin.json` and a `skills/` folder. A skill lives at
+`plugins/<group>/skills/<name>/SKILL.md`. Skills are auto-discovered from the
+plugin's own `skills/` folder, so a plugin exposes exactly the skills in its
+directory — **never** point multiple plugins at one shared `skills/` folder, or
+every plugin leaks every skill.
+
+> This skill itself is **not** distributed — it lives in the repo's `.claude/skills/`,
+> which no plugin's `source` points at, so the marketplace never picks it up. It
+> exists only to guide authoring while working in this repo.
 
 ## Rule 1 — skills must be project-agnostic
 
@@ -37,35 +44,39 @@ Instead:
 Skill content should read identically useful whether Claude is in `api`,
 `flutter-app`, or a repo that doesn't exist yet.
 
-## Rule 2 — keep the four sync points in lockstep
+## Rule 2 — put the skill in the right plugin
 
-A skill is registered in **four** places. Adding or removing one means editing
-all four (or the installer, picker, and docs drift out of sync):
+Because skills are auto-discovered from each plugin's `skills/` folder, the common
+cases are simple:
 
-1. **`skills/<name>/SKILL.md`** — the skill folder itself (plus any bundled
-   resources alongside it). Flat layout: `skills/<name>/`, one folder per skill.
-2. **`.claude-plugin/marketplace.json`** — add/remove `"./skills/<name>"` in the
-   right plugin's `skills` array. This one file serves **two** consumers: the
-   `skills` CLI (group headers in its picker) and Claude Code's **plugin
-   marketplace**. Each plugin uses `"source": "./"` + `"strict": false` so its
-   `skills` array is the authoritative, exhaustive list — only listed skills are
-   exposed (nothing auto-discovered, so `.claude/skills/` stays private). Don't
-   drop `owner`, `source`, or `strict`; Claude Code refuses to parse the file
-   without them. Validate the JSON after editing.
-3. **`install.sh`** — add/remove the bare skill name in the matching `GROUP_*`
-   variable (`GROUP_ONBOARDING`, `GROUP_DEV`, `GROUP_MISC`). The installer expands
-   these into `-s` flags; the CLI has no native group support, so this list must
-   mirror the manifest.
-4. **`README.md`** — the skills **table** (`| **group** | \`name\` | … |`).
+- **Add a skill to an existing group**: create
+  `plugins/<group>/skills/<name>/SKILL.md` (plus any bundled resources). That's
+  it — no `marketplace.json` edit, it's auto-discovered.
+- **Remove a skill**: delete its directory.
+- **Move a skill between groups**: move its directory to the other plugin's
+  `skills/`.
 
-If you add a whole new group, also add it to `ALL_GROUPS` in `install.sh` and add
-a new plugin entry (with `source`/`strict`/`skills`) to the manifest's `plugins`.
+`marketplace.json` only changes when the set of **plugins (groups)** changes. To
+add a new group:
+
+1. Create `plugins/<group>/.claude-plugin/plugin.json` (`name` + `description`)
+   and a `plugins/<group>/skills/` folder with the skills.
+2. Add a plugin entry to `.claude-plugin/marketplace.json` — `name` +
+   `"source": "./plugins/<group>"`. Don't drop the top-level `owner`; Claude Code
+   refuses to parse the file without it. Validate the JSON.
+3. Add a row to the README's plugin table.
+
+The `README.md` does **not** list individual skills (deliberately — it was a
+maintenance burden), so adding a skill needs no README change.
+
+`hoopit-matt-picks` is special: it has a `github` source pointing at
+`mattpocock/skills` with `strict: false` and an explicit `skills` array, so its
+skills resolve against *that* repo. To curate it, edit only its `skills` array in
+the manifest.
 
 ## Checklist
 
 - [ ] Skill body contains no project-specific terms (Rule 1)
 - [ ] Any project-specific facts it relies on are added to each target repo's `CLAUDE.md`
-- [ ] `skills/<name>/SKILL.md` created/removed
-- [ ] `.claude-plugin/marketplace.json` updated + valid JSON
-- [ ] `install.sh` `GROUP_*` (and `ALL_GROUPS` if a new group) updated
-- [ ] `README.md` table updated
+- [ ] Skill lives at `plugins/<group>/skills/<name>/SKILL.md`
+- [ ] `marketplace.json` touched only if a plugin/group was added or removed (valid JSON)
