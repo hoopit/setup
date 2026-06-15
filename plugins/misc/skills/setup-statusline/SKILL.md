@@ -8,7 +8,7 @@ description: Install the team's custom Claude Code status line (directory, git s
 Installs a status line that shows, in order: truncated cwd, git branch + dirty/ahead/behind symbols, model name, effort level, **exact context usage**, and session token totals:
 
 ```
-…/Hoopit/api master  Fable 5 [medium] (85k/1M) ↑72k ↓45k ↯2.6M
+…/Hoopit/api master · Fable 5 medium · 85k/1M ↑72k ↓45k ↯2.6M
 ```
 
 ## Why a custom script
@@ -30,7 +30,7 @@ Streaming writes several transcript entries per assistant message (same `message
 2. **Nerd Font check.** The bar can show Nerd Font icons (branch, model, git status) or plain fallbacks. Print this sample and ask the user whether **every** glyph renders (no boxes or blanks):
 
    ```bash
-   printf '\n  branch \ue0a0   model \U000f06a9   modified \uf040   conflict \uf071   cache \uf0e7\n\n'
+   printf '\n  branch \ue0a0   modified \uf040   conflict \uf071   cache \uf0e7\n\n'
    ```
 
    - **All visible** -> enable icons: `sed -i 's/^use_nerd=0$/use_nerd=1/' ~/.claude/statusline-command.sh`
@@ -57,9 +57,9 @@ Streaming writes several transcript entries per assistant message (same `message
    Expect a single line ending with the `(used/max) ↑… ↓… ↯…` segments.
 6. **Choose a style.** The DATA block is now in place; ask the user how they want the RENDER block (presentation only) styled, and act on their choice:
 
-   1. **Match my setup** *(default)* — mirror their shell prompt, or whatever best fits their terminal. Invoke the built-in `/statusline` agent to restyle **only** the RENDER block, following the instructions under "Using the built-in `/statusline` agent to format" below (read every value from the DATA variables, never recompute, keep glyphs single-cell, add the `↑ ↓ ↯` token segments). Leave the DATA block untouched.
-   2. **Keep the default look** — the shipped Hoopit RENDER block; make no changes.
-   3. **Specify their own** — let them describe the style they want, then edit **only** the RENDER block to match (or pass their description to `/statusline`), again leaving the DATA block untouched.
+   1. **Colour it to match the prompt** *(default)* — keep the shipped RENDER format (the `·`-divided segments, order, glyphs, grey secondary text) and recolour only the directory/git accent to the user's shell prompt. Invoke the built-in `/statusline` agent — which already reads the user's prompt colours — but constrain it to change **only** the colour codes in the RENDER block (`c_cyan` / `c_bcyan` / `c_icyan`), preserving the format, the `·` dividers, the glyphs, the token (`↑ ↓ ↯`) segments, and the DATA block. Claude's own segments stay grey.
+   2. **Keep cyan** — leave the shipped colours and format as-is; make no changes.
+   3. **Restyle freely** — let them describe a different look (or hand the whole RENDER block to `/statusline`), then edit **only** the RENDER block to match, leaving the DATA block untouched.
 7. The status line appears on the next render — no restart needed if the session was launched after `settings.json` already had a `statusLine` entry; otherwise restart Claude Code.
 8. **Final output (required).** After the install steps succeed, end your turn by printing the explanation block below verbatim — this is the only thing the user sees that tells them what each new segment in their status bar means, so do not skip it, summarize it, or fold it into other text. Print it after any other completion notes.
 
@@ -68,9 +68,9 @@ Streaming writes several transcript entries per assistant message (same `message
    - …/parent/dir — current working directory, truncated to the last two path segments (home shown as ~).
    - branch — current git branch (with a Nerd branch icon if enabled). Followed by status markers:
        ? untracked, ! modified, = conflict (or Nerd Font icons if enabled), ⇡N ahead of upstream, ⇣N behind upstream.
-   - Model — the active Claude model's display name (e.g. Fable 5, Opus 4.8); a robot icon precedes it when Nerd icons are enabled.
-   - [effort] — reasoning effort level (low / medium / high / max).
-   - (used/max) — real context usage of the last request: input + cache reads + cache writes,
+   - Model — the active Claude model's display name (e.g. Fable 5, Opus 4.8).
+   - effort — reasoning effort level (low / medium / high / max).
+   - used/max — real context usage of the last request: input + cache reads + cache writes,
      vs. the model's context window. Unlike Claude Code's built-in counter, this stays accurate
      after prompt caching kicks in.
    - ↑sent — session-cumulative non-cached input tokens (fresh input + cache writes).
@@ -105,8 +105,8 @@ To restyle the status line — e.g. to mirror your shell prompt — edit **only 
 
 The RENDER block defines two glyph sets, picked by a `use_nerd` toggle near its top:
 
-- `use_nerd=0` (shipped default) — plain width-1 markers that work in any Unicode font: `?` untracked, `!` modified, `=` conflict, `↯` cache, and no branch/model icons.
-- `use_nerd=1` — Nerd Font icons: branch (U+E0A0), robot for the model (U+F06A9), pencil for modified (U+F040), warning for conflict (U+F071), bolt for cache (U+F0E7).
+- `use_nerd=0` (shipped default) — plain width-1 markers that work in any Unicode font: `?` untracked, `!` modified, `=` conflict, `↯` cache, and no branch icon.
+- `use_nerd=1` — Nerd Font icons: branch (U+E0A0), pencil for modified (U+F040), warning for conflict (U+F071), bolt for cache (U+F0E7).
 
 The installer sets this for you (the Nerd Font check in Install steps prints the icons and asks if they render). To flip it by hand, edit the `use_nerd=` line. Two rules when adding glyphs:
 

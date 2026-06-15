@@ -102,7 +102,7 @@ fi
 #           them. Regenerate this block with the built-in /statusline agent to
 #           match your shell prompt. Default below is the standard Hoopit look:
 #
-#             …/Hoopit/api master  Fable 5 [medium] (85k/1M) ↑72k ↓45k ↯2.6M
+#             …/Hoopit/api master · Fable 5 medium · 85k/1M ↑72k ↓45k ↯2.6M
 # ============================================================================
 
 # format_k: integer tokens -> compact "847" / "26k" / "1.2M"
@@ -140,51 +140,77 @@ format_k() {
 use_nerd=0
 if [ "$use_nerd" = "1" ]; then
   g_branch=$'\ue0a0 '       # U+E0A0 powerline branch, then a space
-  g_model=$'\U000f06a9 '    # U+F06A9 robot, then a space
   g_mod=$'\uf040'           # U+F040 pencil  -> modified
   g_conf=$'\uf071'          # U+F071 warning -> conflict
   g_cache=$'\uf0e7'         # U+F0E7 bolt    -> cache reads
 else
   g_branch=''
-  g_model=''
   g_mod='!'
   g_conf='='
   g_cache='↯'
 fi
 
-# Directory: home as ~, then last 2 path segments with a …/ prefix if truncated
+# Colors. The directory/git segments are meant to mirror the installing user's
+# shell prompt. The three cyan codes below are the SHIPPED DEFAULT — a starship
+# theme — and are meant to be RECOLOURED at install time to match that user's
+# prompt (see "Colour it to match the prompt" in SKILL.md; the built-in
+# /statusline agent sources the prompt colours). Claude's own segments stay grey
+# so they read as secondary regardless of the prompt's accent colour.
+c_reset=$'\033[0m'
+c_cyan=$'\033[36m'        # path + git status   (recolour to match the prompt)
+c_bcyan=$'\033[1;36m'     # repo / cwd basename  (recolour to match the prompt)
+c_icyan=$'\033[3;36m'     # branch, italic       (recolour to match the prompt)
+c_dim=$'\033[38;5;245m'   # medium grey for Claude's secondary segments — a real
+                          # 256-colour grey reads clearer than the ANSI faint
+                          # attribute (\033[2m), which many terminals wash out.
+c_sep=$'\033[38;5;240m'   # dim grey · separator. Same glyph in both spots so the
+                          # status line uses one consistent divider.
+
+# Directory: home as ~, then last 2 path segments with a …/ prefix if truncated.
+# Last segment (cwd basename ≈ starship repo_root) bold cyan, the rest cyan.
 dir="${cwd/#$HOME/~}"
 IFS='/' read -ra _parts <<< "$dir"
 if [ "${#_parts[@]}" -gt 3 ]; then
   dir="…/${_parts[$(( ${#_parts[@]} - 2 ))]}/${_parts[$(( ${#_parts[@]} - 1 ))]}"
 fi
+_base="${dir##*/}"
+_head="${dir%/*}"
+if [ "$_head" = "$dir" ]; then
+  dir_part="${c_bcyan}${dir}${c_reset}"
+else
+  dir_part="${c_cyan}${_head}/${c_reset}${c_bcyan}${_base}${c_reset}"
+fi
 
-# Git segment: optional branch icon, branch name, then status markers
-# (untracked ?, modified, conflict, ⇡ ahead, ⇣ behind).
+# Git segment: branch italic cyan, then status markers cyan (untracked ?,
+# modified, conflict, ⇕ diverged then ⇡ ahead ⇣ behind) — starship git_status.
 git_part=""
 if [ -n "$git_branch" ]; then
   sym=""
   [ "$git_untracked" -eq 1 ] && sym="${sym}?"
   [ "$git_modified" -eq 1 ] && sym="${sym}${g_mod}"
   [ "$git_conflict" -eq 1 ] && sym="${sym}${g_conf}"
-  [ "$git_ahead"  -gt 0 ] 2>/dev/null && sym="${sym}⇡${git_ahead}"
-  [ "$git_behind" -gt 0 ] 2>/dev/null && sym="${sym}⇣${git_behind}"
-  git_part=" ${g_branch}${git_branch}"
-  [ -n "$sym" ] && git_part="${git_part} ${sym}"
+  if [ "$git_ahead" -gt 0 ] 2>/dev/null && [ "$git_behind" -gt 0 ] 2>/dev/null; then
+    sym="${sym}⇕⇡${git_ahead}⇣${git_behind}"
+  else
+    [ "$git_ahead"  -gt 0 ] 2>/dev/null && sym="${sym}⇡${git_ahead}"
+    [ "$git_behind" -gt 0 ] 2>/dev/null && sym="${sym}⇣${git_behind}"
+  fi
+  git_part=" ${c_icyan}${g_branch}${git_branch}${c_reset}"
+  [ -n "$sym" ] && git_part="${git_part} ${c_cyan}${sym}${c_reset}"
 fi
 
 model_part=""
-[ -n "$model" ] && model_part=" ${g_model}$model"
+[ -n "$model" ] && model_part=" $model"
 
 effort_part=""
-[ -n "$effort" ] && effort_part=" [$effort]"
+[ -n "$effort" ] && effort_part=" $effort"
 
 ctx_part=""
 if [ -n "$ctx_used" ] && [ -n "$ctx_max" ]; then
-  ctx_part=" ($(format_k "$ctx_used")/$(format_k "$ctx_max"))"
+  ctx_part=" $(format_k "$ctx_used")/$(format_k "$ctx_max")"
 fi
 
-# Tokens: ↑ sent, ↓ received, ↯ cache reads. Keep these glyphs width-1: a
+# Tokens: ↑ sent, ↓ received, ↯/bolt cache reads. Keep these glyphs width-1: a
 # double-width glyph like ⚡ (U+26A1) is drawn 2 cells wide by the terminal but
 # counted as 1 by the status bar, which desyncs the redraw and leaves stale
 # characters behind when a value's length changes. ↯ (U+21AF) is width-1.
@@ -196,5 +222,14 @@ if [ -n "$tok_sent" ] && [ -n "$tok_recv" ]; then
   fi
 fi
 
-out="${dir}${git_part}${model_part}${effort_part}${ctx_part}${tok_part}"
+# A centered middle dot (·) separates the prompt-like directory/git part from
+# Claude's grey segments, and the same · further splits the model/effort cluster
+# from the context/token usage cluster (only when both clusters are present) —
+# one consistent divider throughout.
+model_effort="${model_part}${effort_part}"
+usage="${ctx_part}${tok_part}"
+dot=""
+[ -n "$model_effort" ] && [ -n "$usage" ] && dot=" ${c_sep}·${c_reset}${c_dim}"
+claude_part="${model_effort}${dot}${usage}"
+out="${dir_part}${git_part}  ${c_sep}·${c_reset}${c_dim}${claude_part}${c_reset}"
 printf '%s' "$out"
