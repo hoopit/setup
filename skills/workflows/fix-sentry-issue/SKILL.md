@@ -25,6 +25,31 @@ Wherever the steps below show `BAC`, `hoopit`, `https://hoopit.atlassian.net`, o
 `$DEFAULT_BRANCH`. Resolve the repo from where you are invoked (cwd) and its
 CLAUDE.md — not from the Sentry ID prefix.
 
+## Keep Jira issue links clean (GitHub-for-Jira)
+
+GitHub-for-Jira links the PR/commits to **every** Jira key (`ABC-123` — letters,
+dash, digits) it finds in the **branch name, commit messages, and PR title +
+body**. There is no "passive mention": wrapping a key in a markdown link or a
+`/browse/` URL does **not** exempt it — the raw key string is still there, so it
+still links. (This is the open request in github-for-jira#1031; until it ships,
+the emitted text is the only control.)
+
+Apply this wherever those three surfaces are written (Steps 3, 6, 7, 9):
+
+- **Allowed — link freely**: only `JIRA_KEY` (the Bug this PR fixes).
+- **Safe**: the Sentry short ID (e.g. `BAC-QCB`) has no digits after the dash,
+  so it does **not** match the Jira-key pattern and is never linked — keep the
+  `## Sentry` reference and the `Fixes <SENTRY_ID>` footer as-is.
+- **Forbidden — never write the key here**: any *other* Jira key — a sibling
+  project's issue (`WEB-…`/`FA-…`), an unrelated `BAC-…` task, a "similar to …"
+  aside. Reference related tickets in **Jira** (issue link / comment), not in
+  the PR — linkifying them will not stop the integration from attaching the PR
+  to them.
+
+When writing the freeform sections (`## Summary`, `## Changes`,
+`## Code review notes`) and any commit body, re-check that no `ABC-123` key
+beyond `JIRA_KEY` has crept in.
+
 ## Step 1 — Fetch Sentry issue details
 
 Load the `sentry-cli` skill for full guidance on the `sentry` CLI before running any commands.
@@ -269,7 +294,7 @@ git push -u origin <branch-name>
 
 ## Step 9 — Create a Pull Request
 
-Create a PR using the GitHub CLI:
+Create a PR using the GitHub CLI. Per *Keep Jira issue links clean* above, the only Jira key allowed in the title/body is `JIRA_KEY` (the Sentry short ID is safe); keep any unrelated work-item keys out of the freeform sections:
 
 ```bash
 cd "$WORKTREE_DIR"
