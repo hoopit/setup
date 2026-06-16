@@ -29,7 +29,7 @@
         "source": "github",
         "repo": "mattpocock/skills"
       },
-      "strict": false,
+      "strict": true,
       "description": "Curated picks from mattpocock/skills, tracking upstream.",
       "skills": [
         "./skills/productivity/caveman",

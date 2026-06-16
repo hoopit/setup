@@ -70,8 +70,10 @@ The `README.md` does **not** list individual skills (deliberately — it was a
 maintenance burden), so adding a skill needs no README change.
 
 `hoopit-matt-picks` is special: it has a `github` source pointing at
-`mattpocock/skills` with `strict: false` and an explicit `skills` array, so its
-skills resolve against *that* repo. To curate it, edit only its `skills` array in
+`mattpocock/skills` with `strict: true` and an explicit `skills` array, so its
+skills resolve against *that* repo. `strict: true` is required because the
+upstream plugin ships its own manifest; it makes our `skills` list authoritative
+instead of conflicting with theirs. To curate it, edit only its `skills` array in
 the manifest.
 
 ## Checklist

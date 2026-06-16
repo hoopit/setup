@@ -71,9 +71,10 @@ each group gets its own directory rather than a shared top-level `skills/` (a
 single shared folder would leak every skill into every plugin).
 
 `hoopit-matt-picks` is the exception: it uses a `github` source pointing at
-`mattpocock/skills` with `strict: false` and an explicit `skills` array listing
+`mattpocock/skills` with `strict: true` and an explicit `skills` array listing
 the specific skill paths to surface (a marketplace can list a plugin fetched from
-a different repo).
+a different repo). `strict: true` makes that curated list authoritative, so it
+overrides the upstream plugin's own manifest instead of conflicting with it.
 
 > **Adding or removing a Hoopit skill?** When working in this repo, Claude has a
 > project-local `create-hoopit-skill` skill (under `.claude/skills/`) that
