@@ -10,32 +10,37 @@ Each plugin lives under [`plugins/<group>/`](plugins/) and bundles its skills.
 is installed and your git credentials work (`gh auth login`, then
 `gh auth setup-git`, or SSH).
 
-Add the marketplace once, then install the plugin(s) you want:
+Everything below runs from your shell — no need to open Claude Code first. Add the
+marketplace once, then install the plugin(s) you want:
 
-```
-/plugin marketplace add hoopit/skills
-```
-
-Install `hoopit-dev` **in-project** (committed to the repo's `.claude/settings.json`,
-so everyone on the project gets it):
-
-```
-/plugin install hoopit-dev@hoopit-skills --scope project
+```bash
+claude plugin marketplace add hoopit/skills
 ```
 
-Install `hoopit-misc` **globally** (user-level, available across all your projects):
+Install `hoopit-dev` **in-project** (`--scope project` commits it to the repo's
+`.claude/settings.json`, so everyone on the project gets it):
 
+```bash
+claude plugin install hoopit-dev@hoopit-skills --scope project
 ```
-/plugin install hoopit-misc@hoopit-skills
+
+Install `hoopit-misc` **globally** (default `user` scope, available across all your
+projects):
+
+```bash
+claude plugin install hoopit-misc@hoopit-skills
 ```
 
 To manually pull the latest, update the marketplace and then the plugins:
 
+```bash
+claude plugin marketplace update hoopit-skills
+claude plugin update hoopit-dev@hoopit-skills
+claude plugin update hoopit-misc@hoopit-skills
 ```
-/plugin marketplace update hoopit-skills
-/plugin update hoopit-dev@hoopit-skills
-/plugin update hoopit-misc@hoopit-skills
-```
+
+> These are also available inside Claude Code as the `/plugin` slash commands
+> (e.g. `/plugin install hoopit-misc@hoopit-skills`).
 
 ### Plugins
 
