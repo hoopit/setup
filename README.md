@@ -14,7 +14,27 @@ Add the marketplace once, then install the plugin(s) you want:
 
 ```
 /plugin marketplace add hoopit/skills
-/plugin install hoopit-onboarding@hoopit-skills
+```
+
+Install `hoopit-dev` **in-project** (committed to the repo's `.claude/settings.json`,
+so everyone on the project gets it):
+
+```
+/plugin install hoopit-dev@hoopit-skills --scope project
+```
+
+Install `hoopit-misc` **globally** (user-level, available across all your projects):
+
+```
+/plugin install hoopit-misc@hoopit-skills
+```
+
+To manually pull the latest, update the marketplace and then the plugins:
+
+```
+/plugin marketplace update hoopit-skills
+/plugin update hoopit-dev@hoopit-skills
+/plugin update hoopit-misc@hoopit-skills
 ```
 
 ### Plugins
@@ -31,8 +51,8 @@ For the exact skills inside each plugin, browse its
 project repo as a **sibling** of wherever you run them (e.g. `../api`,
 `../flutter-app`).
 
-Refresh later with `/plugin marketplace update hoopit-skills`. `hoopit-matt-picks`
-is sourced from Matt's repo, so it picks up his latest on update.
+`hoopit-matt-picks` is sourced from Matt's repo, so it picks up his latest when you
+run the update commands above.
 
 ## How it works
 
