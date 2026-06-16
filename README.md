@@ -6,10 +6,6 @@ Each plugin lives under [`plugins/<group>/`](plugins/) and bundles its skills.
 
 ## Install
 
-`hoopit/skills` is **private**, so Claude Code clones it over git — make sure `gh`
-is installed and your git credentials work (`gh auth login`, then
-`gh auth setup-git`, or SSH).
-
 Everything below runs from your shell — no need to open Claude Code first. Add the
 marketplace once, then install the plugin(s) you want:
 
