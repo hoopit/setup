@@ -116,13 +116,36 @@ Extract and note:
 
 If the issue has attached HAR files, download and review them to get a deeper understanding of the endpoints and payloads involved. HAR files capture the full browser network activity at the time of the bug and often reveal the exact request URLs, headers, request bodies, and response payloads that reproduce the problem.
 
-Download attachments with `acli`:
+`acli` **cannot download attachments** (its `attachment` subcommand only supports `list`/`delete`), so
+use the Jira REST API. This needs a **Jira API token** (Basic auth): set `JIRA_API_TOKEN` and
+`JIRA_EMAIL` (e.g. `set -a; . ~/.config/hoopit/jira.env; set +a`). `$JIRA_BASE_URL` comes from CLAUDE.md.
 
 ```bash
-acli jira workitem attachment download <DETAILS_KEY> --output-directory /tmp/<DETAILS_KEY>-attachments
+A=(-u "$JIRA_EMAIL:$JIRA_API_TOKEN")
+# 1. List attachments (id | filename | mimeType | size)
+curl -s "${A[@]}" -H 'Accept: application/json' "$JIRA_BASE_URL/rest/api/3/issue/<DETAILS_KEY>?fields=attachment" \
+  | python3 -c "import json,sys;[print(x['id'],x['filename'],x['mimeType'],x['size']) for x in json.load(sys.stdin)['fields'].get('attachment',[])]"
+# 2. Download one by id (-L follows the redirect to media storage)
+curl -sL "${A[@]}" "$JIRA_BASE_URL/rest/api/3/attachment/content/<ID>" -o /tmp/<DETAILS_KEY>-<filename>
 ```
 
-Then inspect any `.har` file as JSON — focus on:
+HAR files are often 5–15 MB — **don't read one whole into context**. Extract just the failing requests
+(status 0 or ≥ 400) with a script and inspect those:
+
+```bash
+python3 - /tmp/<DETAILS_KEY>-file.har <<'PY'
+import json, sys
+for e in json.load(open(sys.argv[1]))["log"]["entries"]:
+    req, resp = e["request"], e["response"]
+    if resp["status"] == 0 or resp["status"] >= 400:
+        print(req["method"], resp["status"], req["url"])
+        if req.get("postData", {}).get("text"): print("  req:", req["postData"]["text"][:500])
+        body = (resp.get("content", {}).get("text", "") or "")[:800]
+        if body: print("  resp:", body)
+PY
+```
+
+Focus on:
 - **Failing requests** (non-2xx responses, or responses whose body contains error messages matching the reported symptom)
 - **Request URL, method, headers, and body** — especially the payload shape and any serialization quirks
 - **Response body** — the error message or unexpected data returned
