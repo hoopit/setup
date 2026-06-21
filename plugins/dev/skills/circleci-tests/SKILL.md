@@ -5,6 +5,37 @@ description: Fetch failing tests from a CircleCI job URL. Use when user asks you
 
 # CircleCI Failing Tests
 
+## Prerequisite — `CIRCLE_TOKEN`
+
+The API calls below authenticate with a `CIRCLE_TOKEN` personal API token. Before
+running them, check it's set:
+
+```bash
+[ -n "$CIRCLE_TOKEN" ] && echo "CIRCLE_TOKEN is set" || echo "CIRCLE_TOKEN is missing"
+```
+
+If it's missing, help the user set one up — don't just fail:
+
+1. Have the user create a token at <https://app.circleci.com/settings/user/tokens>
+   (CircleCI → User Settings → Personal API Tokens → *Create New Token*). This step
+   needs the user — pause and let them generate and copy it; don't try to automate it.
+2. Persist it to their shell rc so it survives new shells (pick the file that
+   matches their shell — `~/.bashrc` for bash, `~/.zshrc` for zsh):
+
+   ```bash
+   echo 'export CIRCLE_TOKEN="<token>"' >> ~/.bashrc
+   ```
+
+3. Make it available in the current session before continuing:
+
+   ```bash
+   export CIRCLE_TOKEN="<token>"
+   ```
+
+Re-run the check above and confirm it prints *set* before making any API calls.
+
+## Fetching failing tests
+
 A CircleCI job URL carries everything you need — the `{org}`, `{repo}`, and
 `{jobNumber}` are all in the path:
 ```text
@@ -29,6 +60,5 @@ for i, t in enumerate(failures, 1):
 "
 ```
 
-- `CIRCLE_TOKEN` must be in the environment (typically exported from `~/.bashrc`).
 - If the URL doesn't include the org/repo, check the current repo's `CLAUDE.md`
   for its GitHub repo slug and other CircleCI specifics.
