@@ -1,0 +1,63 @@
+{
+  "_comment": "Machine-readable config for triage-sentry. AI: field/option ids are copied from triage-itsm/scripts/field_map.json (global Jira contexts — shared across ITSM and BAC). Keep them in sync. Sentry-specific config + BAC routing live below. Sentry auth + REST are handled by the `sentry` CLI (`sentry api`, `sentry issue ...`) — no token env var needed.",
+
+  "jira_base_url": "https://hoopit.atlassian.net",
+  "jira_project": "BAC",
+
+  "sentry_org": "hoopit",
+  "sentry_project": "bac",
+  "sentry_project_id": "248915",
+  "sentry_base_url": "https://hoopit.sentry.io",
+  "sentry_environment": "production",
+  "discover_sort": "date",
+  "jira_integration_id": "12493",
+
+  "budget_cap": 15,
+  "sentry_label": "sentry",
+  "suppression_label": "sentry-suppression",
+  "escalated_label": "sentry-escalated",
+  "triage_assignee": "team:ai-triage",
+
+  "fields": {
+    "agentSuitability": "customfield_10975",
+    "value": "customfield_10976",
+    "effort": "customfield_10977",
+    "confidence": "customfield_10978",
+    "area": "customfield_10979",
+    "priorityScore": "customfield_10980",
+    "lastReviewed": "customfield_10981"
+  },
+  "options": {
+    "agentSuitability": {
+      "Agent-ready": "10846",
+      "Agent-assisted": "10847",
+      "Human-only": "10848",
+      "Needs-info": "10849",
+      "Not actionable": "10850"
+    },
+    "value": { "High": "10851", "Medium": "10852", "Low": "10853" },
+    "effort": { "High": "10854", "Medium": "10855", "Low": "10856" },
+    "confidence": { "High": "10857", "Medium": "10858", "Low": "10859" },
+    "area": {
+      "API": "10860",
+      "Web Admin": "10861",
+      "Flutter App": "10862",
+      "Multiple": "10863",
+      "Unknown": "10864"
+    }
+  },
+
+  "_routing_comment": "BAC has no 'Pending development'/'Escalated' status — created bugs land in 'Open', which is exactly what auto-fix-next-bug selects. Differentiation is by AI: Agent Suitability + labels + priority, NOT status. Develop bugs keep their verdict suitability (only Agent-ready ones get auto-fixed). Escalations are forced to Human-only so the fixer skips them, tagged sentry-escalated, High priority; escalate_status is a best-effort transition (skipped if the status does not exist).",
+  "default_area": "API",
+  "default_component": "Backend",
+  "components": ["Backend"],
+  "escalate_suitability": "Human-only",
+  "escalate_priority": "High",
+  "escalate_status": "Escalated",
+  "protected_statuses": ["Done", "Awaiting release", "Code Review", "Ready for QA", "In Progress"],
+
+  "priority_map": { "High": "high", "Medium": "medium", "Low": "low" },
+
+  "_sentry_status_comment": "Sentry status changes use the first-class CLI commands. Archive = `sentry issue archive <id> --until auto` (unarchives on a spike = 'until escalating'). Silence-in-code = `sentry issue archive <id>` (forever). Resolve = `sentry issue resolve <id>`. Assign/priority/note/native-link go through `sentry api`.",
+  "archive_until": { "Archive": "auto", "Silence-in-code": null }
+}

@@ -29,6 +29,11 @@
       "description": "Product work: stress-test plans and ideas against the domain model, sharpen terminology, and produce a PRD."
     },
     {
+      "name": "hoopit-triage",
+      "source": "./plugins/triage",
+      "description": "Autonomous bug triage and burn-down: score Jira/ITSM and Sentry issues for agent-readiness, then fix agent-ready bugs end-to-end on a loop."
+    },
+    {
       "name": "hoopit-matt-picks",
       "source": {
         "source": "github",
