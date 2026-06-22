@@ -1,4 +1,0 @@
-{
-  "name": "hoopit-triage",
-  "description": "Autonomous bug triage and burn-down: score Jira/ITSM and Sentry issues for agent-readiness, then fix agent-ready bugs end-to-end on a loop."
-}

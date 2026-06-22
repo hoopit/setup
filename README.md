@@ -46,7 +46,6 @@ claude plugin update hoopit-misc@hoopit-skills
 | `hoopit-dev` | Day-to-day dev workflows and CLIs: Jira/Sentry issues, PR review, Atlassian, CircleCI |
 | `hoopit-misc` | Odds and ends: status line |
 | `hoopit-product` | Product work: stress-test plans and ideas against the domain model, sharpen terminology, and produce a PRD |
-| `hoopit-triage` | Autonomous bug triage and burn-down: score Jira/ITSM and Sentry issues for agent-readiness, then fix agent-ready bugs end-to-end on a loop |
 | `hoopit-matt-picks` | A curated set of [mattpocock/skills](https://github.com/mattpocock/skills), tracking upstream |
 
 For the exact skills inside each plugin, browse its
