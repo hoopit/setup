@@ -237,7 +237,7 @@ Run a review against the repo's default branch from the worktree:
 
 ```bash
 cd "$WORKTREE_DIR"
-coderabbit review --prompt-only --base "$DEFAULT_BRANCH"
+coderabbit review --agent --base "$DEFAULT_BRANCH"
 ```
 
 Group findings by severity (Critical → Warning → Info). For each finding, decide whether to fix or skip it:

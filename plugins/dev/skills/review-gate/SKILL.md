@@ -78,3 +78,6 @@ Solution:
   so the human knows review coverage was reduced.
 - `coderabbit`/`codex` may be slow (minutes) and need their own auth (`coderabbit auth`, codex setup);
   an auth/`error` result is treated as a skipped reviewer, not a gate failure.
+- The script invokes `coderabbit review --agent` (structured NDJSON findings). The older `--prompt-only`
+  flag was removed from the CodeRabbit CLI — on a CLI that predates `--agent`, CodeRabbit will `error`
+  (silently dropping to opus-only coverage). Keep the CLI current (`coderabbit --version`).

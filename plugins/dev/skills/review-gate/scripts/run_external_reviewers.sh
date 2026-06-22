@@ -19,7 +19,7 @@ CODEX="$(ls -1 "$HOME"/.claude/plugins/cache/openai-codex/*/scripts/codex-compan
 cr=unavailable
 if command -v coderabbit >/dev/null 2>&1; then
   cr=ran
-  ( coderabbit review --prompt-only --base "$BASE" >"$OUT/coderabbit.txt" 2>&1; echo $? >"$OUT/coderabbit.rc" ) &
+  ( coderabbit review --agent --base "$BASE" >"$OUT/coderabbit.txt" 2>&1; echo $? >"$OUT/coderabbit.rc" ) &
 fi
 
 cx=unavailable
