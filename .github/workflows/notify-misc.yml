@@ -1,0 +1,15 @@
+name: Notify misc plugin change
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'plugins/misc/**'
+
+jobs:
+  notify:
+    uses: ./.github/workflows/_notify-plugin.yml
+    with:
+      plugin_name: hoopit-misc
+      plugin_path: plugins/misc
+    secrets: inherit

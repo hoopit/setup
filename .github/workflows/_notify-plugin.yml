@@ -1,14 +1,20 @@
-name: Notify Slack on dev plugin change
+name: Notify plugin change (reusable)
 
-# Posts to Slack whenever a push to main touches the "dev" plugin.
-# Requires the SLACK_DEVELOPMENT_TEAM_WEBHOOK secret (a Slack incoming webhook
-# for #development-team, locked to that one channel at creation time).
+# Reusable core for the per-plugin Slack notifications. Each plugin has its own
+# caller workflow (notify-<plugin>.yml) that filters on its path and calls this.
+# Posts a compact message to #development-team via SLACK_DEVELOPMENT_TEAM_WEBHOOK.
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'plugins/dev/**'
+  workflow_call:
+    inputs:
+      plugin_name:
+        description: Marketplace plugin name, e.g. hoopit-dev
+        required: true
+        type: string
+      plugin_path:
+        description: Repo path of the plugin, e.g. plugins/dev
+        required: true
+        type: string
 
 jobs:
   notify:
@@ -18,8 +24,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Collect changed dev-plugin files
+      - name: Collect changed files
         id: changes
+        env:
+          PLUGIN_PATH: ${{ inputs.plugin_path }}
         run: |
           BEFORE='${{ github.event.before }}'
           AFTER='${{ github.sha }}'
@@ -27,10 +35,10 @@ jobs:
           if [ -z "$BEFORE" ] || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
             BEFORE="$AFTER^"
           fi
-          all=$(git diff --name-only "$BEFORE" "$AFTER" -- 'plugins/dev/**')
+          all=$(git diff --name-only "$BEFORE" "$AFTER" -- "$PLUGIN_PATH/**")
           count=$(printf '%s\n' "$all" | grep -c . || true)
           # Plugin-relative paths, capped at 5 to stay short; collapse the rest into "+N more".
-          files=$(printf '%s\n' "$all" | sed 's#^plugins/dev/##' | head -5 | sed 's/^/• /')
+          files=$(printf '%s\n' "$all" | sed "s#^$PLUGIN_PATH/##" | head -5 | sed 's/^/• /')
           more=$((count - 5))
           if [ "$more" -gt 0 ]; then files="$files"$'\n'"• …+$more more"; fi
           {
@@ -40,12 +48,13 @@ jobs:
       - name: Post to Slack
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_DEVELOPMENT_TEAM_WEBHOOK }}
+          PLUGIN: ${{ inputs.plugin_name }}
           FILES: ${{ steps.changes.outputs.files }}
           COMMIT_MSG: ${{ github.event.head_commit.message }}
           COMPARE_URL: ${{ github.event.compare }}
         run: |
           # Compact, low-spam: linked header + subject, capped file list, update command.
-          text=$(printf '🛠 <%s|*hoopit-dev* updated> — _%s_\n%s\n↻ `claude plugin update hoopit-dev@hoopit-skills`' \
-            "$COMPARE_URL" "${COMMIT_MSG%%$'\n'*}" "$FILES")
+          text=$(printf '🛠 <%s|*%s* updated> — _%s_\n%s\n↻ `claude plugin update %s@hoopit-skills`' \
+            "$COMPARE_URL" "$PLUGIN" "${COMMIT_MSG%%$'\n'*}" "$FILES" "$PLUGIN")
           jq -n --arg text "$text" '{text: $text}' \
             | curl -sf -X POST -H 'Content-type: application/json' --data @- "$SLACK_WEBHOOK_URL"

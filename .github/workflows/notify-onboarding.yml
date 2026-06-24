@@ -1,0 +1,15 @@
+name: Notify onboarding plugin change
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'plugins/onboarding/**'
+
+jobs:
+  notify:
+    uses: ./.github/workflows/_notify-plugin.yml
+    with:
+      plugin_name: hoopit-onboarding
+      plugin_path: plugins/onboarding
+    secrets: inherit

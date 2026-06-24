@@ -1,0 +1,15 @@
+name: Notify product plugin change
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'plugins/product/**'
+
+jobs:
+  notify:
+    uses: ./.github/workflows/_notify-plugin.yml
+    with:
+      plugin_name: hoopit-product
+      plugin_path: plugins/product
+    secrets: inherit

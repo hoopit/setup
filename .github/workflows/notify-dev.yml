@@ -1,0 +1,15 @@
+name: Notify dev plugin change
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'plugins/dev/**'
+
+jobs:
+  notify:
+    uses: ./.github/workflows/_notify-plugin.yml
+    with:
+      plugin_name: hoopit-dev
+      plugin_path: plugins/dev
+    secrets: inherit
