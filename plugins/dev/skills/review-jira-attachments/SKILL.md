@@ -120,3 +120,5 @@ confirm which screen/state the reporter is describing.
 - The `content/<ID>` endpoint 302-redirects to media storage; `-L` is required to follow it.
 - A `401/403` means the token/email is wrong or unset — re-run `setup_jira_env.sh check` and, if it
   fails, redo the Preflight setup above. A `404` means a bad attachment id (re-list).
+- `setup_jira_env.sh` reads your email + site from acli, so `acli jira auth login` must have been run
+  once (otherwise pass the email explicitly: `… write <TOKEN> you@hoopit.io`).
