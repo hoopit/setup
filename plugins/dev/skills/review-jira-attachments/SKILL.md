@@ -15,8 +15,36 @@ HAR" or describe a screenshot they already attached.**
 `acli jira workitem attachment` only supports `list` / `delete`, **not download**. Downloading goes
 through the Jira REST API with a **Jira API token** (Basic auth).
 
-Set `JIRA_API_TOKEN` + `JIRA_EMAIL` (Hoopit: `set -a; . ~/.config/hoopit/jira.env; set +a`) and take
-`$JIRA_BASE_URL` from the repo's CLAUDE.md (e.g. `https://hoopit.atlassian.net`).
+Credentials live in `~/.config/hoopit/jira.env` (`JIRA_API_TOKEN` + `JIRA_EMAIL`). Load them with
+`set -a; . ~/.config/hoopit/jira.env; set +a`, and take `$JIRA_BASE_URL` from the repo's CLAUDE.md
+(e.g. `https://hoopit.atlassian.net`).
+
+### Preflight — make sure the env file works first
+
+Before the first `curl`, verify the credentials. The bundled `scripts/setup_jira_env.sh` checks the
+file *and* probes `/myself`, so it catches a missing file, a half-filled file, and a stale/wrong token:
+
+```bash
+SETUP=$(find ~/.claude/plugins -path '*review-jira-attachments/scripts/setup_jira_env.sh' | head -1)
+bash "$SETUP" check     # exit 0 + "OK: authenticated as …" means you're good — skip the rest of this section
+```
+
+If it reports `MISSING` / `INCOMPLETE` / `INVALID`, set it up. **The email and base URL come from acli
+automatically** (`acli jira auth status`) — the only thing you must supply is the API token, because acli
+keeps its own secret encrypted in the OS keyring and never exposes a reusable Basic-auth token.
+
+1. Tell the user to create a token (≈20 s) at **https://id.atlassian.net/manage-profile/security/api-tokens**
+   → "Create API token" → copy it.
+2. Since the token is a secret, have the **user** run the write command themselves so it needn't pass
+   through the chat — suggest they type it with the `!` prefix, pasting their token in place of `<TOKEN>`:
+
+   ```bash
+   bash "$(find ~/.claude/plugins -path '*review-jira-attachments/scripts/setup_jira_env.sh' | head -1)" write <TOKEN>
+   ```
+
+   This pulls `JIRA_EMAIL` from acli, verifies the token against `/myself`, and writes
+   `~/.config/hoopit/jira.env` with `600` perms. (Pass an email as a 2nd arg if acli isn't logged in:
+   `… write <TOKEN> you@hoopit.io`.) Re-run `… check` to confirm `OK`.
 
 ```bash
 A=(-u "$JIRA_EMAIL:$JIRA_API_TOKEN")
@@ -90,4 +118,5 @@ confirm which screen/state the reporter is describing.
 
 - Filenames can contain spaces — quote the `-o` target path.
 - The `content/<ID>` endpoint 302-redirects to media storage; `-L` is required to follow it.
-- A `401/403` means the token/email is wrong or unset; a `404` means a bad attachment id (re-list).
+- A `401/403` means the token/email is wrong or unset — re-run `setup_jira_env.sh check` and, if it
+  fails, redo the Preflight setup above. A `404` means a bad attachment id (re-list).
