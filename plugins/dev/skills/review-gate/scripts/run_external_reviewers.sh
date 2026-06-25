@@ -8,9 +8,10 @@
 # Output files hold each reviewer's raw findings for the skill to read.
 
 BASE="${1:-master}"
-OUT=/tmp/review-gate
-mkdir -p "$OUT"
-rm -f "$OUT"/coderabbit.txt "$OUT"/coderabbit.rc "$OUT"/codex.txt "$OUT"/codex.rc
+# Unique output dir per invocation so concurrent gates (different repos/worktrees,
+# run in parallel) never clobber each other's findings. The caller reads the exact
+# paths printed below, so the location is opaque to it.
+OUT="$(mktemp -d "${TMPDIR:-/tmp}/review-gate.XXXXXX")"
 
 # Resolve codex-companion.mjs (prefer the newest installed cache, else the marketplace clone).
 CODEX="$(ls -1 "$HOME"/.claude/plugins/cache/openai-codex/*/scripts/codex-companion.mjs 2>/dev/null | sort -V | tail -1)"
