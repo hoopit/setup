@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run the external code reviewers (CodeRabbit + Codex) on the current branch vs <base>,
 # in parallel, skipping any that aren't available locally. Deterministic glue only —
-# the opus review and the fix/dispute judgment live in the review-gate SKILL.
+# the always-on independent review and the fix/dispute judgment live in the review-gate SKILL.
 #
 # Usage:  run_external_reviewers.sh <base-branch>   (default: master)
 # Prints, one per line:  <reviewer>=<ran|error|unavailable>[:<output-file>]
